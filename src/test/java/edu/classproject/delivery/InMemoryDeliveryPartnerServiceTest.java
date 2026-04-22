@@ -46,17 +46,23 @@ public class InMemoryDeliveryPartnerServiceTest {
         @Test
         @DisplayName("Happy Path: Should register partner successfully")
         void testRegisterPartnerSuccess() {
-            // Given: Valid partner name
+            // Given: Valid partner details
             String partnerName = "Alice Johnson";
+            String email = "alice@delivery.com";
+            String phone = "9876543210";
+            String vehicle = "DL-2024-001";
             
             // When: Register partner
-            DeliveryPartner registered = service.register(partnerName);
+            DeliveryPartner registered = service.register(partnerName, email, phone, vehicle);
             
             // Then: Partner registered with correct data
             assertNotNull(registered);
             assertNotNull(registered.partnerId());
             assertTrue(registered.partnerId().startsWith("DP"));
             assertEquals(partnerName, registered.name());
+            assertEquals(email, registered.email());
+            assertEquals(phone, registered.phoneNumber());
+            assertEquals(vehicle, registered.vehicleNumber());
             assertTrue(registered.available());
         }
         
@@ -64,9 +70,9 @@ public class InMemoryDeliveryPartnerServiceTest {
         @DisplayName("Happy Path: Multiple partners have unique IDs")
         void testMultiplePartnersHaveUniqueIds() {
             // When: Register multiple partners
-            DeliveryPartner partner1 = service.register("Alice");
-            DeliveryPartner partner2 = service.register("Bob");
-            DeliveryPartner partner3 = service.register("Charlie");
+            DeliveryPartner partner1 = service.register("Alice", "alice@delivery.com", "9876543210", "DL-001");
+            DeliveryPartner partner2 = service.register("Bob", "bob@delivery.com", "9876543211", "DL-002");
+            DeliveryPartner partner3 = service.register("Charlie", "charlie@delivery.com", "9876543212", "DL-003");
             
             // Then: All have unique IDs
             assertNotEquals(partner1.partnerId(), partner2.partnerId());
@@ -80,7 +86,7 @@ public class InMemoryDeliveryPartnerServiceTest {
             // When: Try to register with null name
             // Then: IllegalArgumentException thrown
             assertThrows(IllegalArgumentException.class, () -> {
-                service.register(null);
+                service.register(null, "email@delivery.com", "9876543210", "DL-001");
             });
         }
         
@@ -90,11 +96,11 @@ public class InMemoryDeliveryPartnerServiceTest {
             // When: Try to register with empty/blank name
             // Then: IllegalArgumentException thrown
             assertThrows(IllegalArgumentException.class, () -> {
-                service.register("");
+                service.register("", "email@delivery.com", "9876543210", "DL-001");
             });
             
             assertThrows(IllegalArgumentException.class, () -> {
-                service.register("   ");
+                service.register("   ", "email@delivery.com", "9876543210", "DL-001");
             });
         }
         
@@ -102,10 +108,13 @@ public class InMemoryDeliveryPartnerServiceTest {
         @DisplayName("Edge Case: Whitespace trimming")
         void testRegisterWithWhitespaceTrims() {
             // When: Register partner with leading/trailing whitespace
-            DeliveryPartner partner = service.register("  John Smith  ");
+            DeliveryPartner partner = service.register("  John Smith  ", "  john@delivery.com  ", "  9876543210  ", "  DL-001  ");
             
-            // Then: Name is trimmed
+            // Then: All fields are trimmed
             assertEquals("John Smith", partner.name());
+            assertEquals("john@delivery.com", partner.email());
+            assertEquals("9876543210", partner.phoneNumber());
+            assertEquals("DL-001", partner.vehicleNumber());
         }
     }
     
@@ -119,7 +128,7 @@ public class InMemoryDeliveryPartnerServiceTest {
         @DisplayName("Happy Path: Set availability to offline")
         void testSetAvailabilityOfflineSuccess() {
             // Given: Registered partner
-            DeliveryPartner partner = service.register("Alice");
+            DeliveryPartner partner = service.register("Alice", "alice@delivery.com", "9876543210", "DL-001");
             String partnerId = partner.partnerId();
             
             // When: Set availability to false
@@ -135,7 +144,7 @@ public class InMemoryDeliveryPartnerServiceTest {
         @DisplayName("Happy Path: Set availability back to online")
         void testSetAvailabilityOnlineSuccess() {
             // Given: Partner set to offline
-            DeliveryPartner partner = service.register("Alice");
+            DeliveryPartner partner = service.register("Alice", "alice@delivery.com", "9876543210", "DL-001");
             String partnerId = partner.partnerId();
             service.setAvailability(partnerId, false);
             
@@ -182,7 +191,7 @@ public class InMemoryDeliveryPartnerServiceTest {
         @DisplayName("Edge Case: Repeated toggles remain stable")
         void testRepeatedTogglesCauseNoCorruption() {
             // Given: Registered partner
-            DeliveryPartner partner = service.register("Alice");
+            DeliveryPartner partner = service.register("Alice", "alice@delivery.com", "9876543210", "DL-001");
             String partnerId = partner.partnerId();
             
             // When: Toggle availability multiple times
@@ -204,7 +213,7 @@ public class InMemoryDeliveryPartnerServiceTest {
         @DisplayName("Edge Case: Set same availability twice (idempotent)")
         void testSetAvailabilityIdempotence() {
             // Given: Partner online
-            DeliveryPartner partner = service.register("Bob");
+            DeliveryPartner partner = service.register("Bob", "bob@delivery.com", "9876543210", "DL-001");
             String partnerId = partner.partnerId();
             
             // When: Set to false twice
@@ -228,9 +237,9 @@ public class InMemoryDeliveryPartnerServiceTest {
         @DisplayName("Happy Path: Get available partners returns online only")
         void testGetAvailablePartnersReturnsOnlineOnly() {
             // Given: Mix of online and offline partners
-            DeliveryPartner partner1 = service.register("Alice");
-            DeliveryPartner partner2 = service.register("Bob");
-            DeliveryPartner partner3 = service.register("Charlie");
+            DeliveryPartner partner1 = service.register("Alice", "alice@delivery.com", "9876543210", "DL-001");
+            DeliveryPartner partner2 = service.register("Bob", "bob@delivery.com", "9876543211", "DL-002");
+            DeliveryPartner partner3 = service.register("Charlie", "charlie@delivery.com", "9876543212", "DL-003");
             
             service.setAvailability(partner2.partnerId(), false); // Bob goes offline
             
@@ -259,8 +268,8 @@ public class InMemoryDeliveryPartnerServiceTest {
         @DisplayName("Happy Path: Empty list when all partners offline")
         void testGetAvailablePartnersReturnsEmptyWhenAllOffline() {
             // Given: All partners offline
-            DeliveryPartner partner1 = service.register("Alice");
-            DeliveryPartner partner2 = service.register("Bob");
+            DeliveryPartner partner1 = service.register("Alice", "alice@delivery.com", "9876543210", "DL-001");
+            DeliveryPartner partner2 = service.register("Bob", "bob@delivery.com", "9876543211", "DL-002");
             
             service.setAvailability(partner1.partnerId(), false);
             service.setAvailability(partner2.partnerId(), false);
@@ -277,15 +286,15 @@ public class InMemoryDeliveryPartnerServiceTest {
         @DisplayName("Failure Case: List cannot be modified externally")
         void testGetAvailablePartnersReturnsUnmodifiableList() {
             // Given: Some available partners
-            service.register("Alice");
-            service.register("Bob");
+            service.register("Alice", "alice@delivery.com", "9876543210", "DL-001");
+            service.register("Bob", "bob@delivery.com", "9876543211", "DL-002");
             
             // When: Get available partners
             List<DeliveryPartner> available = service.getAvailablePartners();
             
             // Then: List is unmodifiable
             assertThrows(UnsupportedOperationException.class, () -> {
-                available.add(new DeliveryPartner("DP_TEST", "Test", true));
+                available.add(new DeliveryPartner("DP_TEST", "Test", "test@delivery.com", "9876543210", "DL-TEST", true));
             });
         }
         
@@ -293,8 +302,8 @@ public class InMemoryDeliveryPartnerServiceTest {
         @DisplayName("Edge Case: Multiple calls return consistent view")
         void testGetAvailablePartnersConsistentCalls() {
             // Given: Some partners
-            service.register("Alice");
-            service.register("Bob");
+            service.register("Alice", "alice@delivery.com", "9876543210", "DL-001");
+            service.register("Bob", "bob@delivery.com", "9876543211", "DL-002");
             
             // When: Call getAvailablePartners multiple times
             List<DeliveryPartner> call1 = service.getAvailablePartners();
@@ -309,7 +318,7 @@ public class InMemoryDeliveryPartnerServiceTest {
         @DisplayName("Edge Case: Availability changes reflected in subsequent queries")
         void testGetAvailablePartnersReflectsAvailabilityChanges() {
             // Given: Partner registered
-            DeliveryPartner partner = service.register("Alice");
+            DeliveryPartner partner = service.register("Alice", "alice@delivery.com", "9876543210", "DL-001");
             
             // Initially available
             assertEquals(1, service.getAvailablePartners().size());
@@ -338,9 +347,9 @@ public class InMemoryDeliveryPartnerServiceTest {
         @DisplayName("Complete workflow: Register, toggle, query")
         void testCompleteWorkflow() {
             // Step 1: Register multiple partners
-            DeliveryPartner alice = service.register("Alice Johnson");
-            DeliveryPartner bob = service.register("Bob Smith");
-            DeliveryPartner charlie = service.register("Charlie Brown");
+            DeliveryPartner alice = service.register("Alice Johnson", "alice@delivery.com", "9876543210", "DL-001");
+            DeliveryPartner bob = service.register("Bob Smith", "bob@delivery.com", "9876543211", "DL-002");
+            DeliveryPartner charlie = service.register("Charlie Brown", "charlie@delivery.com", "9876543212", "DL-003");
             
             // Step 2: Verify all registered and available
             assertEquals(3, service.getAvailablePartners().size());
@@ -368,9 +377,9 @@ public class InMemoryDeliveryPartnerServiceTest {
             // Simulate dispatch system finding available drivers
             
             // Register drivers
-            DeliveryPartner driver1 = service.register("Driver1");
-            DeliveryPartner driver2 = service.register("Driver2");
-            DeliveryPartner driver3 = service.register("Driver3");
+            DeliveryPartner driver1 = service.register("Driver1", "driver1@delivery.com", "9876543210", "DL-001");
+            DeliveryPartner driver2 = service.register("Driver2", "driver2@delivery.com", "9876543211", "DL-002");
+            DeliveryPartner driver3 = service.register("Driver3", "driver3@delivery.com", "9876543212", "DL-003");
             
             // Some drivers are busy
             service.setAvailability(driver2.partnerId(), false);

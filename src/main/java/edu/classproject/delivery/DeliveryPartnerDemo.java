@@ -27,12 +27,32 @@ public class DeliveryPartnerDemo {
         System.out.println("✓ Service initialized\n");
         
         // Step 2: Register delivery partners
-        // Factory Pattern: register() creates partner records
+        // Factory Pattern: register() creates partner records with all required fields
         System.out.println("Step 2: Register Delivery Partners");
-        DeliveryPartner driver1 = partnerService.register("Alice Johnson");
-        DeliveryPartner driver2 = partnerService.register("Bob Smith");
-        DeliveryPartner driver3 = partnerService.register("Charlie Brown");
-        DeliveryPartner driver4 = partnerService.register("Diana Martinez");
+        DeliveryPartner driver1 = partnerService.register(
+            "Alice Johnson", 
+            "alice.johnson@delivery.com", 
+            "9876543210", 
+            "DL-2024-001"
+        );
+        DeliveryPartner driver2 = partnerService.register(
+            "Bob Smith", 
+            "bob.smith@delivery.com", 
+            "9876543211", 
+            "DL-2024-002"
+        );
+        DeliveryPartner driver3 = partnerService.register(
+            "Charlie Brown", 
+            "charlie.brown@delivery.com", 
+            "9876543212", 
+            "DL-2024-003"
+        );
+        DeliveryPartner driver4 = partnerService.register(
+            "Diana Martinez", 
+            "diana.martinez@delivery.com", 
+            "9876543213", 
+            "DL-2024-004"
+        );
         
         System.out.println("Registered Partners:");
         printPartner(driver1);
@@ -113,10 +133,13 @@ public class DeliveryPartnerDemo {
     }
     
     /**
-     * Helper method to print partner details.
+     * Helper method to print partner details with all fields.
      */
     private static void printPartner(DeliveryPartner partner) {
         String status = partner.available() ? "● Online" : "● Offline";
         System.out.println("  " + status + " | " + partner.name() + " | " + partner.partnerId());
+        System.out.println("    Email: " + partner.email());
+        System.out.println("    Phone: " + partner.phoneNumber());
+        System.out.println("    Vehicle: " + partner.vehicleNumber());
     }
 }

@@ -39,7 +39,7 @@ public class InMemoryDeliveryPartnerRepositoryTest {
         @DisplayName("Happy Path: Save and retrieve partner")
         void testSaveAndRetrievePartner() {
             // Given: Partner to save
-            DeliveryPartner partner = new DeliveryPartner("DP_001", "Alice", true);
+            DeliveryPartner partner = new DeliveryPartner("DP_001", "Alice", "alice@delivery.com", "9876543210", "DL-001", true);
             
             // When: Save partner
             repository.save(partner);
@@ -54,11 +54,11 @@ public class InMemoryDeliveryPartnerRepositoryTest {
         @DisplayName("Happy Path: Update existing partner")
         void testUpdateExistingPartner() {
             // Given: Partner saved
-            DeliveryPartner original = new DeliveryPartner("DP_001", "Alice", true);
+            DeliveryPartner original = new DeliveryPartner("DP_001", "Alice", "alice@delivery.com", "9876543210", "DL-001", true);
             repository.save(original);
             
             // When: Save updated version
-            DeliveryPartner updated = new DeliveryPartner("DP_001", "Alice", false);
+            DeliveryPartner updated = new DeliveryPartner("DP_001", "Alice", "alice@delivery.com", "9876543210", "DL-001", false);
             repository.save(updated);
             
             // Then: Retrieved partner reflects update
@@ -107,9 +107,9 @@ public class InMemoryDeliveryPartnerRepositoryTest {
         @DisplayName("Happy Path: Find all partners")
         void testFindAllPartners() {
             // Given: Multiple partners
-            DeliveryPartner partner1 = new DeliveryPartner("DP_001", "Alice", true);
-            DeliveryPartner partner2 = new DeliveryPartner("DP_002", "Bob", false);
-            DeliveryPartner partner3 = new DeliveryPartner("DP_003", "Charlie", true);
+            DeliveryPartner partner1 = new DeliveryPartner("DP_001", "Alice", "alice@delivery.com", "9876543210", "DL-001", true);
+            DeliveryPartner partner2 = new DeliveryPartner("DP_002", "Bob", "bob@delivery.com", "9876543211", "DL-002", false);
+            DeliveryPartner partner3 = new DeliveryPartner("DP_003", "Charlie", "charlie@delivery.com", "9876543212", "DL-003", true);
             
             repository.save(partner1);
             repository.save(partner2);
@@ -126,9 +126,9 @@ public class InMemoryDeliveryPartnerRepositoryTest {
         @DisplayName("Happy Path: Find all available partners only")
         void testFindAllAvailablePartnersOnly() {
             // Given: Mix of available and unavailable
-            repository.save(new DeliveryPartner("DP_001", "Alice", true));
-            repository.save(new DeliveryPartner("DP_002", "Bob", false));
-            repository.save(new DeliveryPartner("DP_003", "Charlie", true));
+            repository.save(new DeliveryPartner("DP_001", "Alice", "alice@delivery.com", "9876543210", "DL-001", true));
+            repository.save(new DeliveryPartner("DP_002", "Bob", "bob@delivery.com", "9876543211", "DL-002", false));
+            repository.save(new DeliveryPartner("DP_003", "Charlie", "charlie@delivery.com", "9876543212", "DL-003", true));
             
             // When: Find all available
             List<DeliveryPartner> available = repository.findAllAvailable();
@@ -150,8 +150,8 @@ public class InMemoryDeliveryPartnerRepositoryTest {
         @DisplayName("Happy Path: Find available returns empty when all offline")
         void testFindAvailableReturnsEmptyWhenAllOffline() {
             // Given: All offline partners
-            repository.save(new DeliveryPartner("DP_001", "Alice", false));
-            repository.save(new DeliveryPartner("DP_002", "Bob", false));
+            repository.save(new DeliveryPartner("DP_001", "Alice", "alice@delivery.com", "9876543210", "DL-001", false));
+            repository.save(new DeliveryPartner("DP_002", "Bob", "bob@delivery.com", "9876543211", "DL-002", false));
             
             // When: Find all available
             List<DeliveryPartner> available = repository.findAllAvailable();
@@ -164,14 +164,14 @@ public class InMemoryDeliveryPartnerRepositoryTest {
         @DisplayName("Edge Case: Returned list is unmodifiable")
         void testFindAllReturnsUnmodifiableList() {
             // Given: Some partners
-            repository.save(new DeliveryPartner("DP_001", "Alice", true));
+            repository.save(new DeliveryPartner("DP_001", "Alice", "alice@delivery.com", "9876543210", "DL-001", true));
             
             // When: Get list
             List<DeliveryPartner> all = repository.findAll();
             
             // Then: Cannot modify returned list
             assertThrows(UnsupportedOperationException.class, () -> {
-                all.add(new DeliveryPartner("DP_NEW", "New", true));
+                all.add(new DeliveryPartner("DP_NEW", "New", "new@delivery.com", "9876543210", "DL-NEW", true));
             });
         }
     }
@@ -184,7 +184,7 @@ public class InMemoryDeliveryPartnerRepositoryTest {
         @DisplayName("Happy Path: Exists check returns true for saved partner")
         void testExistsReturnsTrueForSavedPartner() {
             // Given: Partner saved
-            repository.save(new DeliveryPartner("DP_001", "Alice", true));
+            repository.save(new DeliveryPartner("DP_001", "Alice", "alice@delivery.com", "9876543210", "DL-001", true));
             
             // When: Check exists
             // Then: Returns true
